@@ -1,0 +1,4 @@
+selenium==4.4.3
+pandas
+webdriver-manager==3.7.1
+odfpy

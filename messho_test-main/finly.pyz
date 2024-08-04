@@ -1,0 +1,222 @@
+import sys
+import subprocess
+import pkg_resources
+
+required_packages = {
+    'selenium': 'selenium',
+    'pandas': 'pandas',
+    'openpyxl': 'openpyxl',
+    'webdriver_manager': 'webdriver_manager'
+}
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Check and install required packages
+for package, import_name in required_packages.items():
+    try:
+        pkg_resources.get_distribution(package)
+    except pkg_resources.DistributionNotFound:
+        print(f"{package} not found. Installing...")
+        install(package)
+
+# Now import the required modules
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
+import pandas as pd
+import os
+import time
+import random
+
+Product = ["423149700"]
+
+def setup_driver():
+    user_name = os.getlogin()
+    options = webdriver.ChromeOptions()
+    options.add_argument(f"--user-data-dir=C:\\Users\\{user_name}\\AppData\\Local\\Google\\Chrome\\User Data")
+    options.add_argument(r'--profile-directory=Profile 4')
+    driver_path = r"chromedriver-win64\chromedriver.exe"
+    service = Service(driver_path)
+    return webdriver.Chrome(service=service, options=options)
+
+def meesho_automation(driver, name, contact_Number, address1, address2, pincode, city, state):
+    driver.get("https://www.meesho.com/")
+    time.sleep(random.uniform(3, 5))
+
+    for product in Product:
+        search_input = driver.find_element(By.XPATH, "//input[@placeholder='Try Saree, Kurti or Search by Product Code']")
+        search_input.clear()
+        for digit in product:
+            search_input.send_keys(digit)
+            time.sleep(random.uniform(0.1, 0.3))
+        search_input.send_keys(Keys.RETURN)
+        time.sleep(5)
+
+        first_product = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div[class*='ProductList__GridCol']"))
+        )
+        first_product.click()
+
+        add_to_cart_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='Add to Cart']"))
+        )
+        add_to_cart_button.click()
+
+    cart_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//span[text()='Cart']"))
+    )
+    cart_button.click()
+
+    buy_now_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//span[text()='Continue']"))
+    )
+    buy_now_button.click()
+
+    try:
+        ADD_NEW_ADDRESS = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='ADD NEW ADDRESS']"))
+        )
+        ADD_NEW_ADDRESS.click()
+    except:
+        print("Continue")
+
+    time.sleep(1)
+
+    Name = driver.find_element(By.XPATH, "//input[@id='name']")
+    Name.send_keys(name)
+    Name.send_keys(Keys.RETURN)
+    time.sleep(1)
+    Contact_Number = driver.find_element(By.XPATH, "//input[@id='mobile']")
+    Contact_Number.send_keys(contact_Number)
+    Contact_Number.send_keys(Keys.RETURN)
+    
+    House_no = driver.find_element(By.XPATH, "//input[@id='addressLine1']")
+    House_no.send_keys(address1)
+    House_no.send_keys(Keys.RETURN)
+
+    House_no_1 = driver.find_element(By.XPATH, "//input[@id='addressLine2']")
+    House_no_1.send_keys(address2)
+    House_no_1.send_keys(Keys.RETURN)
+
+    Pincode = driver.find_element(By.XPATH, "//input[@id='pincode']")
+    Pincode.send_keys(pincode)
+    Pincode.send_keys(Keys.RETURN)
+
+    City = driver.find_element(By.XPATH, "//input[@id='city']")
+    City.send_keys(city)
+    City.send_keys(Keys.RETURN)
+
+    state_input = driver.find_element(By.ID, "state")
+    state_input.click()
+
+    dropdown = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "div.sc-jSguLX.gqayFi"))
+    )
+
+    def select_state(state_name):
+        state_elements = dropdown.find_elements(By.CSS_SELECTOR, "div.sc-jSguLX.covox")
+        for element in state_elements:
+            if element.text.strip() == state_name:
+                element.click()
+                return True
+        return False
+
+    if select_state(state):
+        print(f"Successfully selected {state}")
+    else:
+        print(f"Failed to select {state}")
+
+    SAVE_ADD_NEW_ADDRESS = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//span[text()='Save Address and Continue']"))
+    )
+    SAVE_ADD_NEW_ADDRESS.click()
+
+    time.sleep(1)
+    
+    address_containers = WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-jSguLX.fTFpnM"))
+    )
+
+    address_selected = False
+    for container in address_containers:
+        if name:
+            try:
+                name_element = container.find_element(By.CSS_SELECTOR, "h6.sc-bdfCDU.iGbpxC")
+                if name_element.text.strip() == name:
+                    container.click()
+                    print(f"Selected address for {name}")
+                    address_selected = True
+                    break
+            except NoSuchElementException:
+                continue
+        else:
+            container.click()
+            print("Selected the first available address")
+            address_selected = True
+            break
+
+    if address_selected:
+        try:
+            confirm_button = WebDriverWait(driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, "//span[text()='Deliver to this Address']"))
+            )
+            confirm_button.click()
+            print("Confirmed address selection")
+        except:
+            print("Could not find or click the confirmation button")
+
+    Payment_Method = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='Continue']"))
+        )
+    Payment_Method.click()
+
+    try:
+        Place_Order = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='Place Order']"))
+        )
+        Place_Order.click()
+
+        time.sleep(1)
+
+        Place_Order = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='Continue Shopping']"))
+        )
+        Place_Order.click()
+    except:
+        print("code not available")
+        Goto_home = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div[class*='sc-jSguLX lkvbRJ']"))
+        )
+        Goto_home.click()
+   
+    time.sleep(1) 
+
+def main():
+    driver = setup_driver()
+    try:
+        # Read the Excel file
+        df = pd.read_excel('200 od.xlsx')
+
+        # Usage
+        for index, row in df.iterrows():
+            meesho_automation(
+                driver,
+                row['Customer Name'],
+                row['Mobile Number'],
+                row['Address'],
+                row['Address2'],
+                row['Pincode'],
+                row['City'],
+                row['State']
+            )
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
+    main()

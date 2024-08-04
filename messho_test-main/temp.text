@@ -1,0 +1,7 @@
+in state select css can be change 
+    line 109 EC.presence_of_element_located((By.CSS_SELECTOR, "div.sc-jSguLX.gqayFi")) css is dropdown main scc clase (list open thai aenu main clase)
+    line 115  state_elements = dropdown.find_elements(By.CSS_SELECTOR, "div.sc-jSguLX.covox") css is dropdown list na same css name (state list na css badha same name na chhe)
+
+in address select
+    line 136 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-jSguLX.fTFpnM")) css address list na avery component nu css main clase (bada addres na main css clase badha list na same chhe)
+    line 145 name_element = container.find_element(By.CSS_SELECTOR, "h6.sc-bdfCDU.iGbpxC") customer name h6 tage nu css clase name (a anbar nu css clase name chhe jya customer nu name chhe i h6 tag nu css badha nu same chhe)
